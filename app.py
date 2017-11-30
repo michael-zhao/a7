@@ -6,7 +6,9 @@ is no need for any additional classes in this module.  If you need more classes,
 the time they belong in either the wave module or the models module. If you are unsure 
 about where a new class should go, post a question on Piazza.
 
-Michael Zhao mxz4
+Contains code inspired by Walker White's state.py file
+
+# YOUR NAME(S) AND NETID(S) HERE
 # DATE COMPLETED HERE
 """
 import cornell
@@ -90,7 +92,6 @@ class Invaders(GameApp):
         self._text = GLabel(x = (self.view.width) / 2, y = (self.view.height) / 2,
                             linecolor = None, text="Press 'S' to play",
                             font_size = 49, font_name = "RetroGame.ttf")
-        
     
     def update(self,dt):
         """
@@ -138,12 +139,21 @@ class Invaders(GameApp):
         Parameter dt: The time in seconds since last update
         Precondition: dt is a number (int or float)
         """
-        if self.input.is_key_down('s'):
-            self._state = STATE_NEWWAVE
+        self._determineState()
+        
+        if self._state == STATE_INACTIVE:
+            pass
+        if self._state == STATE_NEWWAVE:
             self._wave = Wave()
-            self._state = STATE_ACTIVE
-        
-        
+            self._state = (self._state + 1) % NUM_STATES
+        if self._state == STATE_ACTIVE:
+            self._wave.update(self.input,dt)
+        if self._state == STATE_PAUSED:
+            pass
+        if self._state == STATE_CONTINUE:
+            pass
+        if self._state == STATE_COMPLETE:
+            pass
     
     def draw(self):
         """
@@ -159,9 +169,33 @@ class Invaders(GameApp):
         """
         if self._state == STATE_INACTIVE:
             self._text.draw(self.view)
-        elif self._state == STATE_NEWWAVE:
+        else:
             self._text = None
-            self._wave.draw(view)
-            
+            self._wave.draw(self.view)
+    
     
     # HELPER METHODS FOR THE STATES GO HERE
+    def _determineState(self):
+        """
+        Determines the current state and assigns it to self.state
+        
+        This method checks for a key press, and if there is one, changes the state 
+        to the next value.  A key press is when a key is pressed for the FIRST TIME.
+        We do not want the state to continue to change as we hold down the key.  The
+        user must release the key and press it again to change the state.
+        
+        Acknowledgements: Uses code inspired by Walker M. White
+        Source: https://www.cs.cornell.edu/courses/cs1110/2017fa/assignments/assignment7/samples/state.py
+        """
+        if self._state == STATE_INACTIVE:
+            # Determine the current number of keys pressed
+            curr_keys = self.input.key_count
+            # Only change if we have just pressed the keys this animation frame
+            change = curr_keys > 0 and self.lastkeys == 0 and self.input.keys[0] == 's'
+        
+            if change:
+                # Click happened.  Change the state
+                self._state = (self._state + 1) % NUM_STATES
+        
+            # Update last_keys
+            self.lastkeys= curr_keys

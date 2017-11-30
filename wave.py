@@ -12,7 +12,7 @@ Most of your work on this assignment will be in either this module or models.py.
 Whether a helper method belongs in this module or models.py is often a complicated
 issue.  If you do not know, ask on Piazza and we will answer.
 
-Michael Zhao mxz4
+# YOUR NAME(S) AND NETID(S) HERE
 # DATE COMPLETED HERE
 """
 from game2d import *
@@ -60,20 +60,102 @@ class Wave(object):
     and number of lives. If you make changes, please list the changes with the invariants.
     
     LIST MORE ATTRIBUTES (AND THEIR INVARIANTS) HERE IF NECESSARY
+        lastkeys: the number of keys pressed in the last animation frame [int >= 0]
     """
     
     # GETTERS AND SETTERS (ONLY ADD IF YOU NEED THEM)
     
     # INITIALIZER (standard form) TO CREATE SHIP AND ALIENS
     def __init__(self):
-        self._aliens = [[Alien(source="alien1.png")]]
+        self._ship = Ship()
+        self._aliens = None
+        self._bolts = []
+        self._dline = GPath(points=[0,DEFENSE_LINE,GAME_WIDTH,DEFENSE_LINE],
+                            linewidth=2,linecolor='turquoise')
+        self._lives = 3
+        self._time = 0
+        self.lastkeys = 0
+        self._createAliens()
+        
+    #HELPER METHODS FOR __INIT__
+    #: the width of the game display 
+    #GAME_WIDTH  = 800
+    #: the height of the game display
+    #GAME_HEIGHT = 700
+    
+    def _createAliens(self):
+        self._aliens=[]
+        for i in range(ALIENS_IN_ROW):
+            temp = []
+            for j in range(ALIEN_ROWS):
+                if j == 0:
+                    #self._aliens[i][j] = Alien(x=(ALIEN_H_SEP + ALIEN_WIDTH//2) + i*(ALIEN_H_SEP+ALIEN_WIDTH),y=GAME_HEIGHT - ALIEN_CEILING - j*(ALIEN_V_SEP+ALIEN_HEIGHT), source = ALIEN_IMAGES[0])
+                    temp.append(Alien(X=(ALIEN_H_SEP + ALIEN_WIDTH//2) + i*(ALIEN_H_SEP+ALIEN_WIDTH),Y=GAME_HEIGHT - ALIEN_CEILING - j*(ALIEN_V_SEP+ALIEN_HEIGHT), W = ALIEN_WIDTH, H = ALIEN_HEIGHT, LW = 0, FC = None, S = ALIEN_IMAGES[2]))
+                elif j == 1 or j == 2:
+                    #self._aliens[i][j] = Alien(x=(ALIEN_H_SEP + ALIEN_WIDTH//2) + i*(ALIEN_H_SEP+ALIEN_WIDTH),y=GAME_HEIGHT - ALIEN_CEILING - j*(ALIEN_V_SEP+ALIEN_HEIGHT), source = ALIEN_IMAGES[1])
+                    temp.append(Alien(X=(ALIEN_H_SEP + ALIEN_WIDTH//2) + i*(ALIEN_H_SEP+ALIEN_WIDTH),Y=GAME_HEIGHT - ALIEN_CEILING - j*(ALIEN_V_SEP+ALIEN_HEIGHT), W = ALIEN_WIDTH, H = ALIEN_HEIGHT, LW = 0, FC = None, S = ALIEN_IMAGES[1]))
+                else:
+                    #self._aliens[i][j] = Alien(x=(ALIEN_H_SEP + ALIEN_WIDTH//2) + i*(ALIEN_H_SEP+ALIEN_WIDTH),y=GAME_HEIGHT - ALIEN_CEILING - j*(ALIEN_V_SEP+ALIEN_HEIGHT), source = ALIEN_IMAGES[2])
+                    temp.append(Alien(X=(ALIEN_H_SEP + ALIEN_WIDTH//2) + i*(ALIEN_H_SEP+ALIEN_WIDTH),Y=GAME_HEIGHT - ALIEN_CEILING - j*(ALIEN_V_SEP+ALIEN_HEIGHT), W = ALIEN_WIDTH, H = ALIEN_HEIGHT, LW = 0, FC = None, S = ALIEN_IMAGES[0]))
+            self._aliens.append(temp)
     
     # UPDATE METHOD TO MOVE THE SHIP, ALIENS, AND LASER BOLTS
+    def update(self, input, dt):        
+        if input.is_key_down('left') and self._ship.x > SHIP_WIDTH/2:
+            self._ship.moveShipLeft()
+        if input.is_key_down('right') and self._ship.x < GAME_WIDTH-(SHIP_WIDTH/2):
+            self._ship.moveShipRight()
+        self._pressBolt(input)
+        # print("1: " + str(self._bolts))
+        for bolt in range(len(self._bolts)):
+            self._bolts[bolt].moveBolt()
+            # print("2 " + str(self._bolts))
+            if self._bolts[bolt].y > GAME_HEIGHT:
+                del self._bolts[bolt]
+                # print("3 " + str(self._bolts))
+        
     
     # DRAW METHOD TO DRAW THE SHIP, ALIENS, DEFENSIVE LINE AND BOLTS
     def draw(self, view):
-        for row in range(ALIEN_ROWS):
-            for alien in range(ALIENS_IN_ROW):
-                self._aliens.draw(view)
-    
+        for i in range(ALIENS_IN_ROW):
+            for j in range(ALIEN_ROWS):
+                self._aliens[i][j].draw(view)
+        self._ship.draw(view)
+        self._dline.draw(view)
+        for x in range(len(self._bolts)):
+            self._bolts[x].draw(view)
+                
     # HELPER METHODS FOR COLLISION DETECTION
+    
+    # HELPER METHOD FOR DETERMINE STATE
+    def _playerBoltExists(self):
+        for x in range(len(self._bolts)):
+            if self._bolts[x].getVelocity() > 0:
+                return True
+            else:
+                return False
+        
+    
+    def _pressBolt(self, input):
+        """
+        Determines if there was a key press
+        
+        This method checks for a key press, and if there is one, creates a
+        player bolt.  A key press is when a key is pressed for the FIRST TIME.
+        We do not want the state to continue to change as we hold down the key.
+        The user must release the key and press it again to change the state.
+        
+        Acknowledgements: Uses code inspired by Walker M. White
+        Source: https://www.cs.cornell.edu/courses/cs1110/2017fa/assignments/assignment7/samples/state.py
+        """
+            # Determine the current number of keys pressed
+        curr_keys = input.key_count
+            # Only change if we have just pressed the keys this animation frame
+        change = curr_keys > 0 and self.lastkeys == 0 and input.is_key_down('spacebar')
+        
+        if change and self._playerBoltExists == False:
+               # Click happened.  Change the state
+            self._bolts.append(Bolt(self._ship.x,self._ship.y+SHIP_HEIGHT/2))
+        
+            # Update last_keys
+        self.lastkeys= curr_keys

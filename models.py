@@ -60,8 +60,16 @@ class Ship(GImage):
     # GETTERS AND SETTERS (ONLY ADD IF YOU NEED THEM)
     
     # INITIALIZER TO CREATE A NEW SHIP
+    def __init__(self, **keywords):
+        super().__init__(x=GAME_WIDTH/2, y=SHIP_BOTTOM+(SHIP_HEIGHT/2),
+                         width=SHIP_WIDTH, height=SHIP_HEIGHT, source="ship.png")
     
     # METHODS TO MOVE THE SHIP AND CHECK FOR COLLISIONS
+    def moveShipLeft(self):
+        self.x -= SHIP_MOVEMENT
+            
+    def moveShipRight(self):
+        self.x += SHIP_MOVEMENT
     
     # ADD MORE METHODS (PROPERLY SPECIFIED) AS NECESSARY
 
@@ -90,9 +98,10 @@ class Alien(GImage):
     # GETTERS AND SETTERS (ONLY ADD IF YOU NEED THEM)
     
     # INITIALIZER TO CREATE AN ALIEN
-    def __init__(self, **keywords):
-        super().__init__(x=ALIEN_H_SEP, y=ALIEN_V_SEP, width=ALIEN_WIDTH,
-                        height=ALIEN_HEIGHT)
+    def __init__(self, X, Y, W, H, LW, FC, S):
+        super().__init__(x=X,y=Y,width=W,height=H,linewidth=LW,fillcolor=FC,
+                         source=S)
+        
     
     # METHOD TO CHECK FOR COLLISION (IF DESIRED)
     
@@ -124,13 +133,25 @@ class Bolt(GRectangle):
         _velocity: The velocity in y direction [int or float]
     
     LIST MORE ATTRIBUTES (AND THEIR INVARIANTS) HERE IF NECESSARY
+        _type = the type of bolt fired, player or alien [int, 0 = None, 1 = Player, 2 = Alien]
     """
-    pass
     
     # GETTERS AND SETTERS (ONLY ADD IF YOU NEED THEM)
+    def getVelocity():
+        return self._velocity
     
     # INITIALIZER TO SET THE VELOCITY
+    def __init__(self, X, Y):
+        super().__init__(x=X,y=Y,width=BOLT_WIDTH,height=BOLT_HEIGHT,
+                         fillcolor="green",linecolor="blue")
+        self._type = 0
+        self._velocity = BOLT_SPEED
     
     # ADD MORE METHODS (PROPERLY SPECIFIED) AS NECESSARY
+    def moveBolt(self):
+        if self._type == 2:
+            self._velocity = -BOLT_SPEED
+        self.y += self._velocity
+
 
 # IF YOU NEED ADDITIONAL MODEL CLASSES, THEY GO HERE

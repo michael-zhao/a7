@@ -122,3 +122,4 @@ except:
     pass # Use original value
 
 ### ADD MORE CONSTANTS (PROPERLY COMMENTED) AS NECESSARY ###
+NUM_STATES = 6
